@@ -20,7 +20,10 @@ class _HomeScreenState extends State<HomeScreen>{
      Task(title: "Visual Design", completed: 1, total: 3),
   ];
 
+  List<Task> filteredTasks=[];
+
   TextEditingController taskController=TextEditingController();
+  TextEditingController searchController=TextEditingController();
 
   void showAddTaskForm(){
     showModalBottomSheet(
@@ -40,9 +43,9 @@ class _HomeScreenState extends State<HomeScreen>{
               ElevatedButton(
                 onPressed:(){
                   setState((){
-                    tasks.add(
-                      Task(title:taskController.text,completed:0,total:1),
-                    );
+                      Task newTask=Task(title:taskController.text,completed:0,total:1);
+                      tasks.add(newTask);
+                      filteredTasks.add(newTask);
                   });
                   taskController.clear();
                   Navigator.pop(context);
@@ -54,6 +57,47 @@ class _HomeScreenState extends State<HomeScreen>{
         );
       },
     );
+  }
+
+  void showEditTakForm(int index){
+  taskController.text=tasks[index].title;
+   showModalBottomSheet(
+    context:context,
+    builder:(context){
+      return Padding(
+        padding: EdgeInsets.all(20),
+        child:Column(
+          mainAxisSize:MainAxisSize.max,
+          children:[
+            Text("Edit task",style:TextStyle(fontSize:20,fontWeight:FontWeight.bold,),),
+            SizedBox(height:20),
+            TextField(controller:taskController,decoration:InputDecoration(border:OutlineInputBorder(),),),
+            SizedBox(height:20),
+            ElevatedButton(onPressed:(){
+              setState((){
+                tasks[index].title=taskController.text;
+              });
+              taskController.clear();
+              Navigator.pop(context);
+            },
+            child:Text("Update task"),
+            )
+          ],
+        ),
+        );
+    },
+   );
+  }
+
+  void initState(){
+    super.initState();
+    filteredTasks=tasks;
+  }
+
+  void searchTasks(String query){
+    setState((){
+      filteredTasks=tasks.where((task)=>task.title.toLowerCase().contains(query.toLowerCase())).toList();
+    });
   }
 
   Widget categoryCard(IconData icon,String title,String task,Color color){
@@ -209,6 +253,8 @@ class _HomeScreenState extends State<HomeScreen>{
                   SizedBox(width: 10),
                   Expanded(
                     child: TextField(
+                      controller:searchController,
+                      onChanged:searchTasks,
                       decoration: InputDecoration(
                         hintText: "Search....",
                         border: InputBorder.none,
@@ -249,13 +295,12 @@ class _HomeScreenState extends State<HomeScreen>{
               ),
             ),
 
-            SizedBox(height: 300), // space behind sheet
+            SizedBox(height: 300),
           ],
         ),
       ),
     ),
 
-    // Bottom draggable sheet
     DraggableScrollableSheet(
       initialChildSize: 0.4,
       minChildSize: 0.35,
@@ -293,14 +338,38 @@ class _HomeScreenState extends State<HomeScreen>{
               ),
 
               SizedBox(height: 20),
-              ...tasks.map((task){
-                  return Column(
+              ...filteredTasks.asMap().entries.map((entry){
+                int index=entry.key;
+                Task task=entry.value;
+                  return Dismissible(
+                    key:Key(task.title),
+                    onDismissed:(direction){
+                      setState((){
+                        tasks.removeAt(index);
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content:Text("${task.title} deleted")),
+                      );
+                    },
+                    background:Container(
+                      color:Colors.red,
+                      alignment:Alignment.centerRight,
+                      padding:EdgeInsets.only(right:20),
+                      child:Icon(Icons.delete,color:Colors.white),
+                    ),
+                  child:GestureDetector(
+                    onTap:(){
+                     showEditTakForm(index);
+                    },
+                  child:Column(
                    children: [
                        taskItem(
                       Icons.brush,task.title,"completed ${task.completed}",task.total.toString(),
                     ),
                   SizedBox(height:10),
                    ],
+                  ),
+                  ),
                   );
               }).toList(),
             ],
