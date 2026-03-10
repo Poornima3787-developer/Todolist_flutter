@@ -1,6 +1,61 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget{
+class Task{
+  String title;
+  int completed;
+  int total;
+  Task({required this.title,required this.completed,required this.total});
+}
+
+class HomeScreen extends StatefulWidget{
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState()=>_HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen>{
+  List<Task> tasks=[
+     Task(title: "Sketching", completed: 2, total: 2),
+     Task(title: "WireFraming", completed: 0, total: 4),
+     Task(title: "Visual Design", completed: 1, total: 3),
+  ];
+
+  TextEditingController taskController=TextEditingController();
+
+  void showAddTaskForm(){
+    showModalBottomSheet(
+      context:context,
+      builder:(context){
+        return Padding(
+          padding:EdgeInsets.all(20),
+          child:Column(
+            mainAxisSize:MainAxisSize.max,
+            children:[
+              Text('Add Task',style:TextStyle(fontSize:20,fontWeight:FontWeight.bold),
+              ),
+              SizedBox(height:20),
+              TextField(controller:taskController,decoration:InputDecoration(hintText:"Enter task name",border:OutlineInputBorder(),),
+              ),
+              SizedBox(height:20),
+              ElevatedButton(
+                onPressed:(){
+                  setState((){
+                    tasks.add(
+                      Task(title:taskController.text,completed:0,total:1),
+                    );
+                  });
+                  taskController.clear();
+                  Navigator.pop(context);
+                },
+                child:Text("Add Task"),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget categoryCard(IconData icon,String title,String task,Color color){
     return Container(
       width:119,
@@ -80,7 +135,7 @@ class HomeScreen extends StatelessWidget{
   Widget build(BuildContext context){
     return Scaffold(
       floatingActionButton:FloatingActionButton(
-        onPressed:() {},
+        onPressed:showAddTaskForm,
         backgroundColor:Colors.purple,
         child:Icon(Icons.add),
       ),
@@ -109,8 +164,6 @@ class HomeScreen extends StatelessWidget{
         child: Column(
           children: [
             SizedBox(height: 60),
-
-            // Hello + profile
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -143,8 +196,6 @@ class HomeScreen extends StatelessWidget{
             ),
 
             SizedBox(height: 20),
-
-            // Search bar
             Container(
               padding: EdgeInsets.symmetric(horizontal: 15),
               height: 50,
@@ -242,12 +293,16 @@ class HomeScreen extends StatelessWidget{
               ),
 
               SizedBox(height: 20),
-
-              taskItem(Icons.brush, "Sketching","completed 2","2"),
-              SizedBox(height:10),
-              taskItem(Icons.crop_square, "WireFraming","completed 0","4"),
-              SizedBox(height:10),
-              taskItem(Icons.palette, "Visual Design","completed 1","3"),
+              ...tasks.map((task){
+                  return Column(
+                   children: [
+                       taskItem(
+                      Icons.brush,task.title,"completed ${task.completed}",task.total.toString(),
+                    ),
+                  SizedBox(height:10),
+                   ],
+                  );
+              }).toList(),
             ],
           ),
         );
