@@ -17,21 +17,28 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:AppBar(title:Text('Signup')),
-      body:Padding(
-        padding:EdgeInsets.all(20),
-        child:Column(
+      appBar: AppBar(title: Text('Signup')),
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
           children: [
-            TextField(controller:emailController,
-            decoration:InputDecoration(labelText:"Email"),),
-            TextField(controller:pwdController,
-            decoration: InputDecoration(labelText:"Password"),
-            obscureText: true,),
-            SizedBox(height:20),
-            ElevatedButton(
-              onPressed:signup,
-              child:Text("Signup"),
-            )
+            TextField(
+              controller: emailController,
+              decoration: InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: pwdController,
+              decoration: InputDecoration(labelText: "Password"),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(onPressed: signup, child: Text("Signup")),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:Text('Already have an account?Login'),
+            ),
           ],
         ),
       ),
