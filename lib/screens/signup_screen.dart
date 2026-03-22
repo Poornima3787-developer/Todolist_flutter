@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../screens/homeScreen.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -10,8 +11,22 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController pwdController = TextEditingController();
 
-  void signup() async {
-    await AuthService().signup(emailController.text, pwdController.text);
+  Future<void> signup() async {
+    print("🔥 signup function started");
+    final response = await AuthService().signup(
+      emailController.text,
+      pwdController.text,
+    );
+    print("Signup Response: $response");
+    if (response['success'] == true) {
+      Navigator.pushReplacement(context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? 'Signup failed')),
+      );
+    }
   }
 
   @override
@@ -32,12 +47,16 @@ class _SignupScreenState extends State<SignupScreen> {
               obscureText: true,
             ),
             SizedBox(height: 20),
-            ElevatedButton(onPressed: signup, child: Text("Signup")),
+            ElevatedButton(onPressed: () async{
+    print("Signup button clicked"); // 👈 ADD THIS
+    await signup();
+  },
+ child: Text("Signup")),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child:Text('Already have an account?Login'),
+              child: Text('Already have an account?Login'),
             ),
           ],
         ),

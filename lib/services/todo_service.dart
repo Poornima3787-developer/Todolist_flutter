@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TodoService {
-  final String baseUrl = "http://10.0.2.2:3000";
+  final String baseUrl = "http://10.13.103.240:3000";
   final storage = FlutterSecureStorage();
 
   Future<String?> getToken() async {

@@ -22,7 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchTasks();
   }
 
-  // ✅ FETCH TASKS
   void fetchTasks() async {
     var data = await TodoService().getTodos();
 
@@ -66,43 +65,40 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ✅ UPDATE TASK
+
   void showEditTaskForm(int index) {
-    taskController.text = filteredTasks[index]['title'];
+  taskController.text = filteredTasks[index]['title'];
+  showModalBottomSheet(
+    context: context,
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Edit task", style: TextStyle(fontSize: 20)),
+            SizedBox(height: 20),
+            TextField(controller: taskController),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                await TodoService().updateTodo(
+                  filteredTasks[index]['_id'],
+                  taskController.text,
+                );
+                taskController.clear();
+                Navigator.pop(context);
+                fetchTasks();
+              },
+              child: Text("Update task"),
+            )
+          ],
+        ),
+      );
+    },
+  );
+}
 
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Edit Task", style: TextStyle(fontSize: 20)),
-              SizedBox(height: 20),
-              TextField(controller: taskController),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await TodoService().updateTodo(
-                    filteredTasks[index]['_id'],
-                    taskController.text,
-                  );
-
-                  taskController.clear();
-                  Navigator.pop(context);
-                  fetchTasks();
-                },
-                child: Text("Update"),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ✅ SEARCH
   void searchTasks(String query) {
     setState(() {
       filteredTasks = tasks.where((task) {
@@ -113,14 +109,56 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // ✅ UI ITEM
+
   Widget taskItem(var task) {
-    return ListTile(
-      title: Text(task['title']),
-      subtitle: Text("Completed: ${task['completed']}"),
-      trailing: Text("${task['total']}"),
-    );
-  }
+  return Padding(
+    padding: EdgeInsets.symmetric(horizontal: 30),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.purple.shade50,
+          ),
+          child: Icon(Icons.task, color: Colors.purple),
+        ),
+        SizedBox(width: 20),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                task['title'],
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  decoration: task['completed'] == 1
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+              Text(
+                "completed ${task['completed']}",
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.purple.shade50,
+          ),
+          child: Text(
+            "${task['total']}",
+            style: TextStyle(fontSize: 11, color: Colors.purple),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
