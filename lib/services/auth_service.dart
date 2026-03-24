@@ -1,18 +1,22 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
   final String baseUrl = "http://10.13.103.240:3000";
+  final storage = FlutterSecureStorage();
 
   Future<Map<String, dynamic>> signup(String email, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse("${baseUrl}/signup"),
-        headers: {'Content-Type': "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
-      ) .timeout(Duration(seconds: 5));
-       print("Status Code: ${response.statusCode}");
-    print("Body: ${response.body}");
+      final response = await http
+          .post(
+            Uri.parse("${baseUrl}/signup"),
+            headers: {'Content-Type': "application/json"},
+            body: jsonEncode({"email": email, "password": password}),
+          )
+          .timeout(Duration(seconds: 5));
+      print("Status Code: ${response.statusCode}");
+      print("Body: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
@@ -20,8 +24,7 @@ class AuthService {
         return {"error": "Signup failed"};
       }
     } catch (e) {
-     print("❌ ERROR: $e"); // 👈 ADD THIS
-  return {"error": e.toString()};
+      return {"error": e.toString()};
     }
   }
 
@@ -33,7 +36,10 @@ class AuthService {
         body: jsonEncode({"email": email, "password": password}),
       );
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final data = jsonDecode(response.body);
+        await storage.write(key: 'token', value: data['token']);
+        print("TOKEN SAVED: ${data['token']}");
+        return data;
       } else {
         return {"error": "Invalid credentials"};
       }

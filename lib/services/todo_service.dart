@@ -13,6 +13,7 @@ class TodoService {
   Future<List<dynamic>> getTodos() async {
     try {
       String? token = await getToken();
+      print("TOKEN: $token");
       final response = await http.get(
         Uri.parse("${baseUrl}/todos"),
         headers: {
@@ -26,23 +27,30 @@ class TodoService {
         return [];
       }
     } catch (e) {
+      print("GET TODOS ERROR: $e");
       return [];
     }
   }
 
-  Future<void> addTodo(String title) async {
+  Future<void> addTodo(String title, {List<String> subtasks = const []}) async {
     try {
       String? token = await getToken();
-      await http.post(
+      print("TOKEN: $token");
+      final response = await http.post(
         Uri.parse("$baseUrl/todos"),
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({"title": title, "completed": 0, "total": 1}),
+        body: jsonEncode({
+          "title": title,
+          "subtasks": subtasks.map((s) => {"title": s}).toList(),
+        }),
       );
+      print("ADD STATUS: ${response.statusCode}");
+      print("ADD BODY: ${response.body}");
     } catch (e) {
-      print("Add Error");
+      print("ADD ERROR: $e");
     }
   }
 
@@ -72,5 +80,25 @@ class TodoService {
     } catch (e) {
       print("Delete Error");
     }
+  }
+
+  Future<void> toggleSubtask(String todoId, String subId) async {
+    String? token = await getToken();
+    await http.put(
+      Uri.parse("$baseUrl/todos/$todoId/subtask/$subId"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+  }
+
+  Future<void> addSubtask(String todoId, String title) async {
+    String? token = await getToken();
+    await http.post(
+      Uri.parse("$baseUrl/todos/$todoId/subtask"),
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $token",
+      },
+      body: jsonEncode({"title": title}),
+    );
   }
 }

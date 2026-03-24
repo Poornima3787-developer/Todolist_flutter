@@ -19,7 +19,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    fetchTasks();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      fetchTasks();
+    });
   }
 
   void fetchTasks() async {
@@ -32,8 +34,115 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // ✅ ADD TASK
   void showAddTaskForm() {
+    List<String> subtasks = [];
+    TextEditingController subtaskController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Add Task", style: TextStyle(fontSize: 20)),
+
+                    SizedBox(height: 15),
+
+                    TextField(
+                      controller: taskController,
+                      decoration: InputDecoration(
+                        labelText: "Task Title",
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    SizedBox(height: 15),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: subtaskController,
+                            decoration: InputDecoration(
+                              labelText: "Subtask",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        IconButton(
+                          icon: Icon(Icons.add),
+                          onPressed: () {
+                            if (subtaskController.text.isNotEmpty) {
+                              setModalState(() {
+                                subtasks.add(subtaskController.text);
+                              });
+                              subtaskController.clear();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 10),
+                    Column(
+                      children: subtasks.map((s) {
+                        return ListTile(
+                          title: Text(s),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              setModalState(() {
+                                subtasks.remove(s);
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    minimumSize: Size(double.infinity, 50),
+  ),
+  onPressed: () async {
+    if (taskController.text.isEmpty) return;
+
+    await TodoService().addTodo(
+      taskController.text,
+      subtasks: subtasks,
+    );
+
+    taskController.clear();
+    Navigator.pop(context);
+    fetchTasks();
+  },
+  child: Text("Add Task"),
+),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void showEditTaskForm(int index) {
+    taskController.text = filteredTasks[index]['title'];
     showModalBottomSheet(
       context: context,
       builder: (context) {
@@ -42,21 +151,21 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Add Task", style: TextStyle(fontSize: 20)),
+              Text("Edit task", style: TextStyle(fontSize: 20)),
               SizedBox(height: 20),
               TextField(controller: taskController),
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  if (taskController.text.isEmpty) return;
-
-                  await TodoService().addTodo(taskController.text);
-
+                  await TodoService().updateTodo(
+                    filteredTasks[index]['_id'],
+                    taskController.text,
+                  );
                   taskController.clear();
                   Navigator.pop(context);
                   fetchTasks();
                 },
-                child: Text("Add"),
+                child: Text("Update task"),
               ),
             ],
           ),
@@ -65,97 +174,132 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  void showEditTaskForm(int index) {
-  taskController.text = filteredTasks[index]['title'];
-  showModalBottomSheet(
-    context: context,
-    builder: (context) {
-      return Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("Edit task", style: TextStyle(fontSize: 20)),
-            SizedBox(height: 20),
-            TextField(controller: taskController),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await TodoService().updateTodo(
-                  filteredTasks[index]['_id'],
-                  taskController.text,
-                );
-                taskController.clear();
-                Navigator.pop(context);
-                fetchTasks();
-              },
-              child: Text("Update task"),
-            )
-          ],
-        ),
-      );
-    },
-  );
-}
-
   void searchTasks(String query) {
     setState(() {
       filteredTasks = tasks.where((task) {
-        return task['title']
-            .toLowerCase()
-            .contains(query.toLowerCase());
+        return task['title'].toLowerCase().contains(query.toLowerCase());
       }).toList();
     });
   }
 
+  Widget taskItem(var task, int index) {
+  List subtasks = task['subtasks'] ?? [];
+  int total = subtasks.length;
+  int completed = subtasks.where((t) => t['isCompleted'] == true).length;
+  int remaining = total - completed;
 
-  Widget taskItem(var task) {
+  double progress = total == 0 ? 0 : completed / total;
+  bool allDone = total > 0 && completed == total;
+
   return Padding(
-    padding: EdgeInsets.symmetric(horizontal: 30),
-    child: Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Colors.purple.shade50,
-          ),
-          child: Icon(Icons.task, color: Colors.purple),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    child: Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 3,
+      child: ExpansionTile(
+        tilePadding: EdgeInsets.symmetric(horizontal: 12),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
                 task['title'],
                 style: TextStyle(
-                  fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  decoration: task['completed'] == 1
-                      ? TextDecoration.lineThrough
-                      : null,
+                  color: allDone ? Colors.green : Colors.black,
                 ),
               ),
-              Text(
-                "completed ${task['completed']}",
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+
+            Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.edit, size: 20),
+                  onPressed: () => showEditTaskForm(index),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, size: 20, color: Colors.red),
+                  onPressed: () async {
+                    await TodoService().deleteTodo(task['_id']);
+                    fetchTasks();
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        children: [
+          // 🔥 SUBTASKS
+          ...subtasks.map<Widget>((subtask) {
+            return CheckboxListTile(
+              title: Text(
+                subtask['title'],
+                style: TextStyle(
+                  decoration: subtask['isCompleted']
+                      ? TextDecoration.lineThrough
+                      : TextDecoration.none,
+                  color: subtask['isCompleted']
+                      ? Colors.grey
+                      : Colors.black,
+                ),
               ),
-            ],
+              value: subtask['isCompleted'],
+              onChanged: (value) async {
+                await TodoService().toggleSubtask(
+                  task['_id'],
+                  subtask['_id'],
+                );
+                fetchTasks();
+              },
+            );
+          }).toList(),
+
+          // 🔥 ADD SUBTASK INPUT
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: "Add subtask...",
+                suffixIcon: Icon(Icons.add),
+              ),
+              onSubmitted: (value) async {
+                if (value.isEmpty) return;
+
+                await TodoService().addSubtask(task['_id'], value);
+                fetchTasks();
+              },
+            ),
           ),
-        ),
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.purple.shade50,
+
+          SizedBox(height: 10),
+
+          // 🔥 PROGRESS
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    progress == 1 ? Colors.green : Colors.blue,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  "$completed completed • $remaining remaining",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
           ),
-          child: Text(
-            "${task['total']}",
-            style: TextStyle(fontSize: 11, color: Colors.purple),
-          ),
-        ),
-      ],
+
+          SizedBox(height: 10),
+        ],
+      ),
     ),
   );
 }
@@ -193,20 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       return Dismissible(
                         key: Key(task['_id']),
                         onDismissed: (direction) async {
-                          await TodoService()
-                              .deleteTodo(task['_id']);
+                          await TodoService().deleteTodo(task['_id']);
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Deleted")),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text("Deleted")));
 
                           fetchTasks();
                         },
                         background: Container(color: Colors.red),
-                        child: GestureDetector(
-                          onTap: () => showEditTaskForm(index),
-                          child: taskItem(task),
-                        ),
+                        child: taskItem(task,index),
                       );
                     },
                   ),

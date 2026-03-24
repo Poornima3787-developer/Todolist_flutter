@@ -17,26 +17,27 @@ class _LoginScreenState extends State<LoginScreen> {
   TextEditingController pwdController = TextEditingController();
 
   void login() async {
-    var response = await AuthService().login(
-      emailController.text,
-      pwdController.text,
-    );
+  var response = await AuthService().login(
+    emailController.text,
+    pwdController.text,
+  );
 
-    if (response['token'] != null) {
-      await storage.write(key: "token", value: response['token']);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Login Successfully")));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Invalid Credentials')));
-    }
+  if (response['token'] != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Login Successfully")),
+    );
+    await Future.delayed(Duration(milliseconds: 300));
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Invalid Credentials')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
