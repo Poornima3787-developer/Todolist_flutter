@@ -101,4 +101,19 @@ class TodoService {
       body: jsonEncode({"title": title}),
     );
   }
+
+  Future<void> deleteSubtask(String todoId, String subId) async {
+  try {
+    String? token = await getToken();
+    final response = await http.delete(
+      Uri.parse("$baseUrl/todos/$todoId/subtask/$subId"),
+      headers: {
+        "Authorization":"Bearer $token",
+      },
+    );
+    print("DELETE SUBTASK STATUS: ${response.statusCode}");
+  } catch (e) {
+    print("Delete Subtask Error: $e");
+  }
+ }
 }

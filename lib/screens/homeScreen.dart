@@ -3,7 +3,6 @@ import '../services/todo_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -26,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void fetchTasks() async {
     var data = await TodoService().getTodos();
-
     setState(() {
       tasks = data;
       filteredTasks = data;
@@ -37,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void showAddTaskForm() {
     List<String> subtasks = [];
     TextEditingController subtaskController = TextEditingController();
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -54,11 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("Add Task", style: TextStyle(fontSize: 20)),
-
+                  children: [Text("Add Task", style: TextStyle(fontSize: 20)),
                     SizedBox(height: 15),
-
                     TextField(
                       controller: taskController,
                       decoration: InputDecoration(
@@ -66,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-
                     SizedBox(height: 15),
                     Row(
                       children: [
@@ -93,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-
                     SizedBox(height: 10),
                     Column(
                       children: subtasks.map((s) {
@@ -110,27 +102,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       }).toList(),
                     ),
-
                     SizedBox(height: 20),
-
-                    ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    minimumSize: Size(double.infinity, 50),
-  ),
-  onPressed: () async {
-    if (taskController.text.isEmpty) return;
-
-    await TodoService().addTodo(
-      taskController.text,
-      subtasks: subtasks,
-    );
-
-    taskController.clear();
-    Navigator.pop(context);
-    fetchTasks();
-  },
-  child: Text("Add Task"),
-),
+                    ElevatedButton(style: ElevatedButton.styleFrom(
+                       minimumSize: Size(double.infinity, 50),
+                    ),
+                      onPressed: () async {
+                     if(taskController.text.isEmpty) return;
+                     await TodoService().addTodo(
+                     taskController.text,
+                     subtasks: subtasks,
+                    );
+                    taskController.clear();
+                    Navigator.pop(context);
+                     fetchTasks();
+                    },
+                    child: Text("Add Task"),
+                   ),
                   ],
                 ),
               ),
@@ -188,8 +175,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int completed = subtasks.where((t) => t['isCompleted'] == true).length;
   int remaining = total - completed;
 
-  double progress = total == 0 ? 0 : completed / total;
-  bool allDone = total > 0 && completed == total;
+  double progress = total== 0 ? 0 :completed / total;
+  bool allDone = total> 0 && completed == total;
 
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -230,7 +217,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
 
         children: [
-          // 🔥 SUBTASKS
           ...subtasks.map<Widget>((subtask) {
             return CheckboxListTile(
               title: Text(
@@ -255,7 +241,6 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }).toList(),
 
-          // 🔥 ADD SUBTASK INPUT
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: TextField(
@@ -265,7 +250,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onSubmitted: (value) async {
                 if (value.isEmpty) return;
-
                 await TodoService().addSubtask(task['_id'], value);
                 fetchTasks();
               },
@@ -274,7 +258,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           SizedBox(height: 10),
 
-          // 🔥 PROGRESS
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
@@ -296,7 +279,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
           SizedBox(height: 10),
         ],
       ),
@@ -333,16 +315,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: filteredTasks.length,
                     itemBuilder: (context, index) {
                       var task = filteredTasks[index];
-
                       return Dismissible(
                         key: Key(task['_id']),
                         onDismissed: (direction) async {
                           await TodoService().deleteTodo(task['_id']);
-
                           ScaffoldMessenger.of(
                             context,
                           ).showSnackBar(SnackBar(content: Text("Deleted")));
-
                           fetchTasks();
                         },
                         background: Container(color: Colors.red),
