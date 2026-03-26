@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import '../screens/homeScreen.dart';
+import '../screens/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -12,15 +12,13 @@ class _SignupScreenState extends State<SignupScreen> {
   TextEditingController pwdController = TextEditingController();
 
   Future<void> signup() async {
-    print("🔥 signup function started");
     final response = await AuthService().signup(
       emailController.text,
       pwdController.text,
     );
-    print("Signup Response: $response");
     if (response['success'] == true) {
       Navigator.pushReplacement(context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,10 +46,9 @@ class _SignupScreenState extends State<SignupScreen> {
             ),
             SizedBox(height: 20),
             ElevatedButton(onPressed: () async{
-    print("Signup button clicked"); // 👈 ADD THIS
-    await signup();
-  },
- child: Text("Signup")),
+            await signup();
+         },
+           child:Text("Signup")),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);

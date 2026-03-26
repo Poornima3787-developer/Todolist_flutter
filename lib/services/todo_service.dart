@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class TodoService {
-  final String baseUrl = "http://10.13.103.240:3000";
+  final String baseUrl = "http://192.168.0.197:3000";
   final storage = FlutterSecureStorage();
 
   Future<String?> getToken() async {
@@ -13,7 +13,6 @@ class TodoService {
   Future<List<dynamic>> getTodos() async {
     try {
       String? token = await getToken();
-      print("TOKEN: $token");
       final response = await http.get(
         Uri.parse("${baseUrl}/todos"),
         headers: {
@@ -35,7 +34,6 @@ class TodoService {
   Future<void> addTodo(String title, {List<String> subtasks = const []}) async {
     try {
       String? token = await getToken();
-      print("TOKEN: $token");
       final response = await http.post(
         Uri.parse("$baseUrl/todos"),
         headers: {
@@ -47,8 +45,6 @@ class TodoService {
           "subtasks": subtasks.map((s) => {"title": s}).toList(),
         }),
       );
-      print("ADD STATUS: ${response.statusCode}");
-      print("ADD BODY: ${response.body}");
     } catch (e) {
       print("ADD ERROR: $e");
     }
@@ -63,7 +59,7 @@ class TodoService {
           "Content-Type": "application/json",
           "Authorization": "Bearer $token",
         },
-        body: jsonEncode({"title": title}),
+        body:jsonEncode({"title": title}),
       );
     } catch (e) {
       print("Update error");
@@ -111,7 +107,6 @@ class TodoService {
         "Authorization":"Bearer $token",
       },
     );
-    print("DELETE SUBTASK STATUS: ${response.statusCode}");
   } catch (e) {
     print("Delete Subtask Error: $e");
   }

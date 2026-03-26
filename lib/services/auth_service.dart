@@ -3,22 +3,18 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AuthService {
-  final String baseUrl = "http://10.13.103.240:3000";
+  final String baseUrl = "http://192.168.0.197:3000";
   final storage = FlutterSecureStorage();
 
   Future<Map<String, dynamic>> signup(String email, String password) async {
     try {
-      final response = await http
-          .post(
+      final response = await http.post(
             Uri.parse("${baseUrl}/signup"),
             headers: {'Content-Type': "application/json"},
             body: jsonEncode({"email": email, "password": password}),
           )
           .timeout(Duration(seconds: 5));
-      print("Status Code: ${response.statusCode}");
-      print("Body: ${response.body}");
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200||response.statusCode == 201) {
         return jsonDecode(response.body);
       } else {
         return {"error": "Signup failed"};
@@ -38,7 +34,6 @@ class AuthService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         await storage.write(key: 'token', value: data['token']);
-        print("TOKEN SAVED: ${data['token']}");
         return data;
       } else {
         return {"error": "Invalid credentials"};
